@@ -39,7 +39,7 @@ async function recursiveGetData1 (response, frases) {
                 try {
                     const newFileList = JSON.parse(data);
                               
-                    await recursiveGetData2(newFileList, frases);
+                    await recursiveGetData1(newFileList, frases);
                 } catch (error) { 
                     if (data !== undefined) frases.push(data);
                 }
@@ -52,7 +52,7 @@ async function recursiveGetData1 (response, frases) {
         try {
             const fileList = JSON.parse(data);
 
-            recursiveGetData2(fileList, frases);
+            recursiveGetData1(fileList, frases);
         } catch (error) { outputResult(data); }
     }
 } 
