@@ -13,7 +13,7 @@ window.onload = function () {
         const response = await fetch('https://fe.it-academy.by/Examples/words_tree/root.txt');
 
         if (response.ok) {
-            recursiveGetData2(response, []);
+            recursiveGetData1(response, []);
         } else {
             console.log(`Ошибочный запрос: ${response.status} : ${response.statusText}`);
         }
@@ -26,69 +26,27 @@ function outputResult (frases) {
     textWindow.textContent = frases;
 }
 
-async function recursiveGetData1 (response, frases) {  
-    if (Array.isArray(response)) {
-        const fileList = response;
-        
-        const requests = fileList.map(function (file) {
-            return fetch(`https://fe.it-academy.by/Examples/words_tree/${file}`).then(function (result) {
-                if (result.ok) return result.text();
-            }).catch(function (error) {
-                console.log(error);
-            });
-        });
-            
-        Promise.allSettled(requests).then(function (results) { 
-            results.forEach(function (response2) { 
-                if (response2.status == "fulfilled") {
-                    const data = response2.value;
-                        
-                    try {
-                        const newFileList = JSON.parse(data);
-                              
-                        recursiveGetData1(newFileList, frases);
-                    } catch (error) { 
-                        frases.push(data);
-                    }
-                }
-            }); 
-                
-            outputResult(frases);
-        }).catch(function (error) {
-            console.log(error);
-        });
-    } else {
-        response.text().then(function (data) {
-            try {
-                const fileList = JSON.parse(data);
-
-                recursiveGetData1(fileList, frases);
-            } catch (error) { outputResult(data); }
-        });
-    }
-} 
-
-async function recursiveGetData2 (response, frases) { 
+async function recursiveGetData1 (response, frases) { 
     if (Array.isArray(response)) {
         const fileList = response;
         
         const requests = fileList.map(file => fetch(`https://fe.it-academy.by/Examples/words_tree/${file}`).then(result => result.ok ? result.text() : null).catch(error => console.log(error)));
 
-        const results = await Promise.allSettled(requests);
-
-        results.forEach(response2 => { 
-            if (response2.status == "fulfilled") {
-                const data = response2.value;
+        for (const response of await Promise.allSettled(requests)) {
+            if (response.status == "fulfilled") {
+                const data = response.value;
                         
                 try {
                     const newFileList = JSON.parse(data);
                               
-                    recursiveGetData2(newFileList, frases);
-                } catch (error) { frases.push(data); }
+                    await recursiveGetData2(newFileList, frases);
+                } catch (error) { 
+                    if (data !== undefined) frases.push(data);
+                }
             }
-        }); 
+        }
                 
-        outputResult(frases);
+        outputResult(frases.join(" "));
     } else {
         const data = await response.text();
         try {
